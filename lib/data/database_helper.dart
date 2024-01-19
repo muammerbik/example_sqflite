@@ -67,6 +67,15 @@ class DataBaseHelper {
     return result;
   }
 
+  Future<List<Kategori>> kategoriListesiniGetir() async {
+    var kategorilerListesi = await kategorileriGetir();
+    List<Kategori> kategoriList = [];
+    for (var map in kategorilerListesi) {
+      kategoriList.add(Kategori.fromMap(map));
+    }
+    return kategoriList;
+  }
+
   Future<int> kategoriEkle(Kategori kategori) async {
     var db = await _getDataBase();
     var result = await db.insert("kategori", kategori.toMap());
@@ -95,10 +104,24 @@ class DataBaseHelper {
     return result;
   }
 
+// orderby eklenen notunID değerine göre sıralamak için kullanılıyor. yani ilk eklenen not altta son ekleenen üstte gibi.
+//çoklu tablolar kullanılırken tablolar birbirine bağımlı oluyor. yani bir   A tablosuNU çağırdığınızda B tablosuna bağımlı olduğu için B tablosunuda çağırman gerek. sql sorgusu     SELECT * FROM  "not" INNER JOIN kategori ON kategori.kategoriId ="not".kategoriId;
+// önce not  tablosunu çağırıyor, sonra kategori taoblosuyla birleştiriyor,sonra da kategoriId değerini aynı tabloda getiriyor.
   Future<List<Map<String, dynamic>>> notlariGetir() async {
     var db = await _getDataBase();
-    var result = await db.query("not", orderBy: "notId DESC");
+    var result = await db.rawQuery(
+        'SELECT * FROM  "not" INNER JOIN kategori ON kategori.kategoriId ="not".kategoriId  order by notId Desc');
     return result;
+  }
+
+//notları getirmek istediğimizde gelen notu bana map olarak veriyor. gelen mapi direk bir listeye ekleyip,kullanmak için bu fonksiyonu yazdım.
+  Future<List<Not>> notListesiniGetir() async {
+    var notlarListesi = await notlariGetir();
+    List<Not> notList = [];
+    for (var map in notlarListesi) {
+      notList.add(Not.fromMap(map));
+    }
+    return notList;
   }
 
   Future<int> notGuncelle(Not not) async {
